@@ -1,0 +1,10 @@
+/edge-proxy
+/dist/
+*.db
+*.db-journal
+*.test
+*.out
+*.log
+.DS_Store
+.idea/
+.vscode/
