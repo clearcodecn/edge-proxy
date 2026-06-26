@@ -1,0 +1,11 @@
+{{define "content"}}
+<section class="card">
+  <h2>登录</h2>
+  <form method="post" action="/login">
+    <label>用户名 <input name="username" autofocus required></label>
+    <label>密码 <input name="password" type="password" required></label>
+    {{if .Error}}<p class="error">{{.Error}}</p>{{end}}
+    <button type="submit">登录</button>
+  </form>
+</section>
+{{end}}

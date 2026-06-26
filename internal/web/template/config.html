@@ -1,0 +1,21 @@
+{{define "content"}}
+<section class="card">
+  <h2>全局配置 (只读)</h2>
+  <p class="hint">修改后请编辑 <code>/etc/edge-proxy/config.yaml</code> 并 <code>systemctl restart edge-proxy</code>。</p>
+  <dl class="config-dl">
+    <dt>admin.bind</dt><dd><code>{{.Admin.Bind}}</code></dd>
+    <dt>admin.username</dt><dd>{{.Admin.Username}}</dd>
+    <dt>acme.email</dt><dd>{{.Acme.Email}}</dd>
+    <dt>acme.directory</dt><dd><code>{{.Acme.Directory}}</code></dd>
+    <dt>probe.health_path</dt><dd><code>{{.Probe.HealthPath}}</code></dd>
+    <dt>probe.timeout</dt><dd>{{.Probe.TimeoutSeconds}}s</dd>
+    <dt>probe.fail_threshold / recover_threshold</dt><dd>{{.Probe.FailThreshold}} / {{.Probe.RecoverThreshold}}</dd>
+    <dt>alert.dedup_window</dt><dd>{{.Alert.DedupWindowMinutes}} 分钟</dd>
+    <dt>alert.dingtalk</dt><dd>{{if .Alert.Dingtalk.Webhook}}<span class="ok">已配置</span>{{else}}<span class="ko">未配置</span>{{end}}</dd>
+    <dt>alert.telegram</dt><dd>{{if and .Alert.Telegram.BotToken .Alert.Telegram.ChatID}}<span class="ok">已配置</span>{{else}}<span class="ko">未配置</span>{{end}}</dd>
+    <dt>paths.data_dir</dt><dd><code>{{.Paths.DataDir}}</code></dd>
+    <dt>paths.nginx_conf_dir</dt><dd><code>{{.Paths.NginxConfDir}}</code></dd>
+    <dt>paths.nginx_reload_cmd</dt><dd><code>{{.Paths.NginxReloadCmd}}</code></dd>
+  </dl>
+</section>
+{{end}}

@@ -1,0 +1,44 @@
+{{define "content"}}
+<section class="card">
+  <h2>新增域名</h2>
+  <form hx-post="/domains" hx-target="#domain-rows" hx-swap="afterbegin" hx-on::after-request="this.reset()">
+    <label>域名 <input name="host" placeholder="example.com" required></label>
+    <button type="submit">添加</button>
+  </form>
+</section>
+<section class="card">
+  <h2>域名列表</h2>
+  <table>
+    <thead>
+      <tr><th>域名</th><th>状态</th><th>证书时间</th><th>最近探测</th><th>操作</th></tr>
+    </thead>
+    <tbody id="domain-rows">
+    {{range .Domains}}
+      {{template "domain_row" .}}
+    {{end}}
+    </tbody>
+  </table>
+</section>
+{{end}}
+
+{{define "domain_row"}}
+<tr id="d-{{.ID}}" data-status="{{.Status}}">
+  <td>{{.Host}}</td>
+  <td><span class="status status-{{.Status}}">{{.Status}}</span></td>
+  <td>{{if .CertAt}}{{.CertAt.Format "2006-01-02"}}{{else}}—{{end}}</td>
+  <td>
+    {{if .LastProbeAt}}
+      {{if .LastProbeOK}}<span class="ok">✓</span>{{else}}<span class="ko">✗</span>{{end}}
+      {{.LastProbeAt.Format "01-02 15:04"}}
+    {{else}}—{{end}}
+  </td>
+  <td class="actions">
+    {{if eq .Status "cert_failed"}}<button hx-post="/domains/{{.ID}}/retry" hx-target="#d-{{.ID}}" hx-swap="outerHTML">重试</button>{{end}}
+    {{if ne .Status "deprecated"}}
+      <button hx-post="/domains/{{.ID}}/deprecate" hx-confirm="确认废弃 {{.Host}}?" hx-target="#d-{{.ID}}" hx-swap="outerHTML">废弃</button>
+    {{else}}
+      <button hx-post="/domains/{{.ID}}/recycle" hx-confirm="彻底清理 {{.Host}} (含 nginx conf + LE 证书)?" hx-target="#d-{{.ID}}" hx-swap="delete" class="danger">回收</button>
+    {{end}}
+  </td>
+</tr>
+{{end}}
