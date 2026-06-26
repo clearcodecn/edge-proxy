@@ -3,7 +3,7 @@
 # Most recipes shell out to ~/go124/bin/go on local dev machines that have multi-version
 # toolchains; override with `GO=go make ...` if your default `go` is fine.
 
-GO       ?= ~/go124/bin/go
+GO       ?= go
 PROJECT  := edge-proxy
 DIST     := dist
 COMMIT   := $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
