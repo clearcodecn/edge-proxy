@@ -1,56 +1,56 @@
 {{define "content"}}
-<div class="space-y-4 max-w-5xl">
+<div class="w-full space-y-4">
   <div role="alert" class="alert alert-info text-sm">
     <span>ℹ 配置只读。修改请编辑 <code class="font-mono">/etc/edge-proxy/config.yaml</code> 后执行 <code class="font-mono">systemctl restart edge-proxy</code></span>
   </div>
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+  <div data-config-grid="responsive" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
     <div class="card bg-base-100 shadow-sm">
       <div class="card-body p-5">
         <h2 class="card-title text-base mb-1">管理</h2>
-        <dl class="grid grid-cols-[120px_1fr] gap-y-1 text-sm">
-          <dt class="text-base-content/60">bind</dt><dd><code class="font-mono">{{.Admin.Bind}}</code></dd>
-          <dt class="text-base-content/60">username</dt><dd>{{.Admin.Username}}</dd>
+        <dl class="grid gap-2 sm:grid-cols-[140px_minmax(0,1fr)]">
+          <dt class="text-base-content/60">bind</dt><dd class="min-w-0 break-all"><code class="font-mono">{{.Admin.Bind}}</code></dd>
+          <dt class="text-base-content/60">username</dt><dd class="min-w-0 break-all">{{.Admin.Username}}</dd>
         </dl>
       </div>
     </div>
     <div class="card bg-base-100 shadow-sm">
       <div class="card-body p-5">
         <h2 class="card-title text-base mb-1">ACME</h2>
-        <dl class="grid grid-cols-[120px_1fr] gap-y-1 text-sm">
-          <dt class="text-base-content/60">email</dt><dd>{{.Acme.Email}}</dd>
-          <dt class="text-base-content/60">directory</dt><dd class="break-all"><code class="font-mono text-xs">{{.Acme.Directory}}</code></dd>
+        <dl class="grid gap-2 sm:grid-cols-[140px_minmax(0,1fr)] text-sm">
+          <dt class="text-base-content/60">email</dt><dd class="min-w-0 break-all">{{.Acme.Email}}</dd>
+          <dt class="text-base-content/60">directory</dt><dd class="min-w-0 break-all"><code class="font-mono text-xs">{{.Acme.Directory}}</code></dd>
         </dl>
       </div>
     </div>
     <div class="card bg-base-100 shadow-sm">
       <div class="card-body p-5">
         <h2 class="card-title text-base mb-1">探测</h2>
-        <dl class="grid grid-cols-[160px_1fr] gap-y-1 text-sm">
-          <dt class="text-base-content/60">health_path</dt><dd><code class="font-mono">{{.Probe.HealthPath}}</code></dd>
-          <dt class="text-base-content/60">timeout</dt><dd>{{.Probe.TimeoutSeconds}} s</dd>
-          <dt class="text-base-content/60">fail / recover</dt><dd>{{.Probe.FailThreshold}} / {{.Probe.RecoverThreshold}}</dd>
+        <dl class="grid gap-2 sm:grid-cols-[140px_minmax(0,1fr)] text-sm">
+          <dt class="text-base-content/60">health_path</dt><dd class="min-w-0 break-all"><code class="font-mono">{{.Probe.HealthPath}}</code></dd>
+          <dt class="text-base-content/60">timeout</dt><dd class="min-w-0">{{.Probe.TimeoutSeconds}} s</dd>
+          <dt class="text-base-content/60">fail / recover</dt><dd class="min-w-0">{{.Probe.FailThreshold}} / {{.Probe.RecoverThreshold}}</dd>
         </dl>
       </div>
     </div>
     <div class="card bg-base-100 shadow-sm">
       <div class="card-body p-5">
         <h2 class="card-title text-base mb-1">告警</h2>
-        <dl class="grid grid-cols-[140px_1fr] gap-y-1 text-sm">
-          <dt class="text-base-content/60">dedup_window</dt><dd>{{.Alert.DedupWindowMinutes}} 分钟</dd>
+        <dl class="grid gap-2 sm:grid-cols-[140px_minmax(0,1fr)] text-sm">
+          <dt class="text-base-content/60">dedup_window</dt><dd class="min-w-0">{{.Alert.DedupWindowMinutes}} 分钟</dd>
           <dt class="text-base-content/60">dingtalk</dt>
-          <dd>{{if .Alert.Dingtalk.Webhook}}<span class="badge badge-success badge-sm">已配置</span>{{else}}<span class="badge badge-ghost badge-sm">未配置</span>{{end}}</dd>
+          <dd class="min-w-0">{{if .Alert.Dingtalk.Webhook}}<span class="badge badge-success badge-sm">已配置</span>{{else}}<span class="badge badge-ghost badge-sm">未配置</span>{{end}}</dd>
           <dt class="text-base-content/60">telegram</dt>
-          <dd>{{if and .Alert.Telegram.BotToken .Alert.Telegram.ChatID}}<span class="badge badge-success badge-sm">已配置</span>{{else}}<span class="badge badge-ghost badge-sm">未配置</span>{{end}}</dd>
+          <dd class="min-w-0">{{if and .Alert.Telegram.BotToken .Alert.Telegram.ChatID}}<span class="badge badge-success badge-sm">已配置</span>{{else}}<span class="badge badge-ghost badge-sm">未配置</span>{{end}}</dd>
         </dl>
       </div>
     </div>
-    <div class="card bg-base-100 shadow-sm md:col-span-2">
+    <div class="card bg-base-100 shadow-sm md:col-span-2 xl:col-span-2">
       <div class="card-body p-5">
         <h2 class="card-title text-base mb-1">路径</h2>
-        <dl class="grid grid-cols-[200px_1fr] gap-y-1 text-sm">
-          <dt class="text-base-content/60">data_dir</dt><dd><code class="font-mono">{{.Paths.DataDir}}</code></dd>
-          <dt class="text-base-content/60">nginx_conf_dir</dt><dd><code class="font-mono">{{.Paths.NginxConfDir}}</code></dd>
-          <dt class="text-base-content/60">nginx_reload_cmd</dt><dd><code class="font-mono">{{.Paths.NginxReloadCmd}}</code></dd>
+        <dl class="grid gap-2 text-sm sm:grid-cols-[180px_minmax(0,1fr)]">
+          <dt class="text-base-content/60">data_dir</dt><dd class="min-w-0 break-all"><code class="font-mono">{{.Paths.DataDir}}</code></dd>
+          <dt class="text-base-content/60">nginx_conf_dir</dt><dd class="min-w-0 break-all"><code class="font-mono">{{.Paths.NginxConfDir}}</code></dd>
+          <dt class="text-base-content/60">nginx_reload_cmd</dt><dd class="min-w-0 break-all"><code class="font-mono">{{.Paths.NginxReloadCmd}}</code></dd>
         </dl>
       </div>
     </div>

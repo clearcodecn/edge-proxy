@@ -61,7 +61,31 @@ func RenderDomain(host string) []byte {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+		proxy_http_version 1.1;
+		proxy_set_header upgrade $http_upgrade;
+		proxy_set_header connection "upgrade";
+		proxy_connect_timeout 60s;
+		proxy_read_timeout 120s;
+		proxy_send_timeout 120s;
+		proxy_buffering off;
+
+		# 允许所有域名进行跨域调用
+		add_header Access-Control-Allow-Origin *;
+		# 允许任何请求方法
+		add_header Access-Control-Allow-Methods *;
+		# 允许携带凭证（如 cookie、认证信息）
+		#add_header Access-Control-Allow-Credentials 'true';
+		# 允许的请求头
+		add_header Access-Control-Allow-Headers *;
+		# 针对预检请求（OPTIONS）的处理
+		if ($request_method = 'OPTIONS') {
+		   # 返回 204 状态码表示请求已处理但无内容
+		   return 204;
+		}
     }
+
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header X-Content-Type-Options nosniff always;
 }
 `
 	return []byte(fmt.Sprintf(tmpl, host, host, host))

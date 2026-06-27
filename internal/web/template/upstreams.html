@@ -1,98 +1,104 @@
 {{define "content"}}
-<div x-data="pageState({resource:'upstreams'})" class="space-y-4 max-w-7xl" @keydown.escape.window="closeModal()">
+<div x-data="pageState({resource:'upstreams'})" class="w-full space-y-4" @keydown.escape.window="closeModal()">
 
-  <form id="upstream-search"
-        hx-get="/upstreams"
-        hx-target="#upstream-list"
-        hx-swap="outerHTML"
-        hx-trigger="chipchange delay:200ms, change from:select"
-        hx-push-url="false"
-        @submit.prevent
-        class="card bg-base-100 shadow-sm">
-    <div class="card-body p-4 flex flex-wrap items-center gap-3">
+  <div data-list-controls="upstreams" class="grid w-full gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
+    <form id="upstream-search"
+          hx-get="/upstreams"
+          hx-target="#upstream-list"
+          hx-swap="outerHTML"
+          hx-trigger="chipchange delay:200ms, change from:select"
+          hx-push-url="false"
+          @submit.prevent
+          class="card bg-base-100 shadow-sm">
+      <div class="card-body flex flex-col gap-3 p-4 sm:flex-row sm:flex-wrap sm:items-start">
 
-      <!-- chip input -->
-      <div x-data="chipInput({inputName:'addrs'})"
-           data-initial-chips="{{.List.AddrsStr}}"
-           x-init="if ($el.dataset.initialChips) { chips = $el.dataset.initialChips.split('\n').filter(Boolean); $nextTick(() => recompute()); }"
-           @click="focusInput()"
-           class="flex-1 min-w-[360px] relative">
-        <div class="input input-bordered input-sm flex items-center pr-2 cursor-text h-auto py-1">
-          <span class="text-base-content/50 mr-1 select-none">🔍</span>
-          <div x-ref="strip" class="flex items-center gap-1 flex-1 overflow-hidden flex-nowrap min-w-0 whitespace-nowrap">
-            <template x-for="(chip, idx) in chips" :key="chip">
-              <span data-chip class="badge badge-neutral badge-sm gap-1 shrink-0">
-                <span class="max-w-[160px] truncate" x-text="chip"></span>
-                <button type="button" @click.stop="removeChip(idx)" class="text-xs leading-none hover:text-error">×</button>
-              </span>
-            </template>
-            <input x-ref="input"
-                   x-model="buffer"
-                   @keydown="onKey($event)"
-                   @paste="onPaste($event)"
-                   @compositionstart="onCompositionStart()"
-                   @compositionend="onCompositionEnd($event)"
-                   :placeholder="chips.length === 0 ? '精确搜索回源地址（粘贴多行 / Enter 添加）' : ''"
-                   class="flex-1 min-w-[120px] bg-transparent outline-none text-sm border-0 p-0 focus:ring-0">
+        <!-- chip input -->
+        <div x-data="chipInput({inputName:'addrs'})"
+             data-initial-chips="{{.List.AddrsStr}}"
+             x-init="if ($el.dataset.initialChips) { chips = $el.dataset.initialChips.split('\n').filter(Boolean); $nextTick(() => recompute()); }"
+             @click="focusInput()"
+             class="relative min-w-0 flex-1 sm:basis-full">
+          <div class="input input-bordered input-sm flex h-auto items-center py-1 pr-2 cursor-text">
+            <span class="mr-1 select-none text-base-content/50">🔍</span>
+            <div x-ref="strip" class="flex min-w-0 flex-1 flex-nowrap items-center gap-1 overflow-hidden whitespace-nowrap">
+              <template x-for="(chip, idx) in chips" :key="chip">
+                <span data-chip class="badge badge-neutral badge-sm gap-1 shrink-0">
+                  <span class="max-w-[160px] truncate" x-text="chip"></span>
+                  <button type="button" @click.stop="removeChip(idx)" class="text-xs leading-none hover:text-error">×</button>
+                </span>
+              </template>
+              <input x-ref="input"
+                     x-model="buffer"
+                     @keydown="onKey($event)"
+                     @paste="onPaste($event)"
+                     @compositionstart="onCompositionStart()"
+                     @compositionend="onCompositionEnd($event)"
+                     :placeholder="chips.length === 0 ? '精确搜索回源地址（粘贴多行 / Enter 添加）' : ''"
+                     class="min-w-[120px] flex-1 border-0 bg-transparent p-0 text-sm outline-none focus:ring-0">
+            </div>
+            <div class="flex flex-none items-center gap-1 pl-1">
+              <button type="button"
+                      x-show="overflowCount > 0"
+                      @click.stop="togglePopover()"
+                      class="badge badge-ghost badge-sm gap-0 cursor-pointer select-none">
+                +<span x-text="overflowCount"></span>
+              </button>
+              <button type="button"
+                      x-show="chips.length > 0"
+                      @click.stop="clearAll()"
+                      class="px-1 text-sm leading-none text-base-content/50 hover:text-error"
+                      title="清空所有 chip">×</button>
+            </div>
           </div>
-          <div class="flex-none flex items-center gap-1 pl-1">
-            <button type="button"
-                    x-show="overflowCount > 0"
-                    @click.stop="togglePopover()"
-                    class="badge badge-ghost badge-sm gap-0 cursor-pointer select-none">
-              +<span x-text="overflowCount"></span>
-            </button>
-            <button type="button"
-                    x-show="chips.length > 0"
-                    @click.stop="clearAll()"
-                    class="text-base-content/50 hover:text-error text-sm px-1 leading-none"
-                    title="清空所有 chip">×</button>
+
+          <div x-show="popoverOpen" x-cloak
+               @click.outside="closePopover()"
+               x-transition
+               class="absolute right-0 top-full z-30 mt-1 max-h-72 w-[420px] overflow-y-auto rounded-md border border-base-300 bg-base-100 p-3 shadow-lg">
+            <div class="mb-2 text-xs text-base-content/60">全部 <span x-text="chips.length"></span> 项（点击 × 移除）</div>
+            <div class="flex flex-wrap gap-1">
+              <template x-for="(chip, idx) in chips" :key="'p-' + chip">
+                <span class="badge badge-neutral badge-sm gap-1">
+                  <span class="max-w-[260px] truncate" x-text="chip"></span>
+                  <button @click="removeChip(idx)" class="text-xs leading-none hover:text-error">×</button>
+                </span>
+              </template>
+            </div>
           </div>
+
+          <input type="hidden" name="addrs" :value="chips.join('\n')">
         </div>
 
-        <div x-show="popoverOpen" x-cloak
-             @click.outside="closePopover()"
-             x-transition
-             class="absolute top-full mt-1 right-0 bg-base-100 border border-base-300 rounded-md shadow-lg p-3 z-30 w-[420px] max-h-72 overflow-y-auto">
-          <div class="text-xs text-base-content/60 mb-2">全部 <span x-text="chips.length"></span> 项（点击 × 移除）</div>
-          <div class="flex flex-wrap gap-1">
-            <template x-for="(chip, idx) in chips" :key="'p-' + chip">
-              <span class="badge badge-neutral badge-sm gap-1">
-                <span class="truncate max-w-[260px]" x-text="chip"></span>
-                <button @click="removeChip(idx)" class="text-xs leading-none hover:text-error">×</button>
-              </span>
-            </template>
-          </div>
+        <div class="w-full sm:w-auto">
+          <select name="status" class="select select-bordered select-sm w-full sm:w-40">
+            <option value="all" {{if eq .List.Status ""}}selected{{end}}>全部状态</option>
+            <option value="enabled" {{if eq .List.Status "enabled"}}selected{{end}}>启用</option>
+            <option value="disabled" {{if eq .List.Status "disabled"}}selected{{end}}>禁用</option>
+          </select>
         </div>
-
-        <input type="hidden" name="addrs" :value="chips.join('\n')">
       </div>
+    </form>
 
-      <select name="status" class="select select-bordered select-sm">
-        <option value="all" {{if eq .List.Status ""}}selected{{end}}>全部状态</option>
-        <option value="enabled" {{if eq .List.Status "enabled"}}selected{{end}}>启用</option>
-        <option value="disabled" {{if eq .List.Status "disabled"}}selected{{end}}>禁用</option>
-      </select>
-
-      <div class="ml-auto flex items-center gap-2">
+    <div class="card bg-base-100 shadow-sm xl:w-[34rem]">
+      <div class="card-body flex flex-col gap-3 p-4">
         <form hx-post="/upstreams"
               hx-target="#upstream-rows"
               hx-swap="afterbegin"
               hx-on::after-request="this.reset()"
-              class="flex items-center gap-1">
-          <input name="addr" placeholder="10.0.0.5:80" required class="input input-bordered input-sm w-36">
-          <input name="weight" type="number" value="1" min="1" max="100" class="input input-bordered input-sm w-16" title="weight">
-          <input name="remark" placeholder="备注" class="input input-bordered input-sm w-32">
-          <label class="cursor-pointer flex items-center gap-1 px-1">
+              class="grid gap-2 sm:grid-cols-2 xl:grid-cols-[minmax(0,1.6fr)_7rem_minmax(0,1fr)_auto_auto]">
+          <input name="addr" placeholder="10.0.0.5:80" required class="input input-bordered input-sm w-full sm:col-span-2 xl:col-span-1">
+          <input name="weight" type="number" value="1" min="1" max="100" class="input input-bordered input-sm w-full" title="weight">
+          <input name="remark" placeholder="备注" class="input input-bordered input-sm w-full">
+          <label class="flex min-h-9 cursor-pointer items-center gap-2 rounded-md border border-base-300 px-3 text-sm">
             <input name="is_backup" type="checkbox" value="1" class="checkbox checkbox-xs">
-            <span class="text-xs">备用</span>
+            <span>备用</span>
           </label>
-          <button type="submit" class="btn btn-primary btn-sm">+ 新增</button>
+          <button type="submit" class="btn btn-primary btn-sm w-full">+ 新增</button>
         </form>
-        <button type="button" @click="openImport()" class="btn btn-outline btn-sm">⬆ 批量导入</button>
+        <button type="button" @click="openImport()" class="btn btn-outline btn-sm w-full xl:self-start">⬆ 批量导入</button>
       </div>
     </div>
-  </form>
+  </div>
 
   <!-- Sticky batch toolbar -->
   <div x-show="selectionCount > 0" x-cloak x-transition
@@ -204,10 +210,10 @@
   </div>
   {{end}}
 
-  <div class="card bg-base-100 shadow-sm">
+  <div class="card overflow-hidden bg-base-100 shadow-sm">
     <div class="card-body p-0">
-      <div class="overflow-x-auto">
-        <table class="table table-sm">
+      <div data-list-table-scroll="upstreams" class="overflow-x-auto">
+        <table class="table table-sm min-w-[880px]">
           <thead>
             <tr>
               <th class="w-8">

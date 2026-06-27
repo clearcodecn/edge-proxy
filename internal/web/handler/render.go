@@ -6,6 +6,7 @@ package handler
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"edge-proxy/internal/store"
 )
@@ -24,13 +25,13 @@ func renderDomainRow(w http.ResponseWriter, d *store.Domain) {
 }
 
 func renderDomainList(w http.ResponseWriter, list []store.Domain) {
-	body := `<table id="domains">`
+	body := `<div data-admin-shell="responsive"><button data-mobile-nav="admin" type="button">menu</button><div data-list-controls="domains"></div><div data-list-table-scroll="domains" class="overflow-x-auto"><table id="domains" class="table table-sm min-w-[720px]">`
 	for _, d := range list {
 		d := d
 		body += fmt.Sprintf(`<tr id="d-%d" data-host="%s" data-status="%s"><td>%s</td><td>%s</td></tr>`,
 			d.ID, d.Host, d.Status, d.Host, d.Status)
 	}
-	body += `</table>`
+	body += `</table></div></div>`
 	writeHTML(w, http.StatusOK, body)
 }
 
@@ -42,12 +43,32 @@ func renderUpstreamRow(w http.ResponseWriter, u *store.Upstream) {
 }
 
 func renderUpstreamList(w http.ResponseWriter, list []store.Upstream) {
-	body := `<table id="upstreams">`
+	body := `<div data-admin-shell="responsive"><button data-mobile-nav="admin" type="button">menu</button><div data-list-controls="upstreams"></div><div data-list-table-scroll="upstreams" class="overflow-x-auto"><table id="upstreams" class="table table-sm min-w-[880px]">`
 	for _, u := range list {
 		u := u
 		body += fmt.Sprintf(`<tr id="u-%d" data-addr="%s" data-enabled="%t"><td>%s</td><td>%d</td><td>%t</td></tr>`,
 			u.ID, u.Addr, u.Enabled, u.Addr, u.Weight, u.Enabled)
 	}
-	body += `</table>`
+	body += `</table></div></div>`
 	writeHTML(w, http.StatusOK, body)
+}
+
+func yesNoBadge(b bool) string {
+	if b {
+		return `<span class="badge badge-success badge-sm">已配置</span>`
+	}
+	return `<span class="badge badge-ghost badge-sm">未配置</span>`
+}
+
+func configRow(term, value string) string {
+	return fmt.Sprintf(`<dt class="text-base-content/60">%s</dt><dd class="min-w-0 break-all">%s</dd>`, term, value)
+}
+
+func configCard(title, dlClass string, rows ...string) string {
+	return fmt.Sprintf(
+		`<div class="card bg-base-100 shadow-sm"><div class="card-body p-5"><h2 class="card-title text-base mb-1">%s</h2><dl class="%s">%s</dl></div></div>`,
+		title,
+		dlClass,
+		strings.Join(rows, ""),
+	)
 }

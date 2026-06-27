@@ -20,7 +20,7 @@ acme:
   challenge_port: 5002
 
 probe:
-  health_path: "/"
+  health_path: "/_healthy.html"
   timeout_seconds: 3
   fail_threshold: 3
   recover_threshold: 2

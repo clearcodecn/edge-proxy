@@ -297,3 +297,30 @@ func TestDomain_ListGET(t *testing.T) {
 		t.Errorf("list missing hosts:\n%s", body)
 	}
 }
+
+func TestDomain_ListGET_ResponsiveLayoutHooks(t *testing.T) {
+	h, repo, _, _ := newDomainHandler(t)
+	_, _ = repo.Create("responsive.example.com")
+
+	rec := httptest.NewRecorder()
+	h.ListGET(rec, httptest.NewRequest("GET", "/", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("code = %d", rec.Code)
+	}
+
+	body := rec.Body.String()
+	if !strings.Contains(body, "responsive.example.com") {
+		t.Fatalf("body missing seeded host:\n%s", body)
+	}
+	for _, want := range []string{
+		`data-mobile-nav="admin"`,
+		`data-admin-shell="responsive"`,
+		`data-list-controls="domains"`,
+		`data-list-table-scroll="domains"`,
+		`class="table table-sm min-w-[720px]"`,
+	} {
+		if !strings.Contains(body, want) {
+			t.Errorf("body missing %q:\n%s", want, body)
+		}
+	}
+}

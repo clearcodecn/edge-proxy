@@ -162,6 +162,33 @@ func TestUpstream_ListGET(t *testing.T) {
 	}
 }
 
+func TestUpstream_ListGET_ResponsiveLayoutHooks(t *testing.T) {
+	h, repo, _ := newUpstreamHandler(t)
+	_, _ = repo.Create(store.UpstreamInput{Addr: "responsive:80"})
+
+	rec := httptest.NewRecorder()
+	h.ListGET(rec, httptest.NewRequest("GET", "/", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("code = %d", rec.Code)
+	}
+
+	body := rec.Body.String()
+	if !strings.Contains(body, "responsive:80") {
+		t.Fatalf("body missing seeded addr:\n%s", body)
+	}
+	for _, want := range []string{
+		`data-mobile-nav="admin"`,
+		`data-admin-shell="responsive"`,
+		`data-list-controls="upstreams"`,
+		`data-list-table-scroll="upstreams"`,
+		`class="table table-sm min-w-[880px]"`,
+	} {
+		if !strings.Contains(body, want) {
+			t.Errorf("body missing %q:\n%s", want, body)
+		}
+	}
+}
+
 func TestUpstream_NginxApplyFailureSurfaced(t *testing.T) {
 	h, _, nx := newUpstreamHandler(t)
 	nx.err = errors.New("nginx -t failed")
