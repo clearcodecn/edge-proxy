@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"ls -la ~/go124/bin/go 2>/dev/null && ~/go124/bin/go version 2>/dev/null; echo \\\"---\\\"; ls -la /usr/local/go/bin/go 2>/dev/null && /usr/local/go/bin/go version 2>/dev/null; echo \\\"---\\\"; ls...",
+  "error": "Exit code 1\n-rwxr-xr-x@ 1 zmj  staff  13778704  8  2  2025 /Users/zmj/go124/bin/go\ngo version go1.25.0 darwin/arm64\n---\n---",
+  "timestamp": "2026-06-27T08:36:20.495Z",
+  "retry_count": 2
+}

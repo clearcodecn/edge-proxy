@@ -1,0 +1,378 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1782542649855,
+  "projectRoot": "/Users/zmj/Desktop/project/edge-proxy",
+  "techStack": {
+    "languages": [
+      {
+        "name": "Go",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "go.mod"
+        ]
+      },
+      {
+        "name": "C/C++",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "Makefile"
+        ]
+      }
+    ],
+    "frameworks": [],
+    "packageManager": "go",
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": "make build",
+    "testCommand": "make test",
+    "lintCommand": null,
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "docs",
+      "scripts"
+    ],
+    "gitBranches": null
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "cmd": {
+      "path": "cmd",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1782542649842,
+      "keyFiles": []
+    },
+    "docs": {
+      "path": "docs",
+      "purpose": "Documentation",
+      "fileCount": 1,
+      "lastAccessed": 1782542649843,
+      "keyFiles": [
+        "deploy.md"
+      ]
+    },
+    "internal": {
+      "path": "internal",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1782542649843,
+      "keyFiles": []
+    },
+    "scripts": {
+      "path": "scripts",
+      "purpose": "Build/utility scripts",
+      "fileCount": 0,
+      "lastAccessed": 1782542649843,
+      "keyFiles": []
+    },
+    "internal/config": {
+      "path": "internal/config",
+      "purpose": "Configuration files",
+      "fileCount": 2,
+      "lastAccessed": 1782542649844,
+      "keyFiles": [
+        "config.go",
+        "config_test.go"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "openspec/changes/redesign-admin-ui/tasks.md",
+      "accessCount": 7,
+      "lastAccessed": 1782551355579,
+      "type": "file"
+    },
+    {
+      "path": "Makefile",
+      "accessCount": 4,
+      "lastAccessed": 1782549409628,
+      "type": "file"
+    },
+    {
+      "path": "cmd/edge-proxy/cmd_run.go",
+      "accessCount": 4,
+      "lastAccessed": 1782550758001,
+      "type": "file"
+    },
+    {
+      "path": "internal/web/handler/domain_test.go",
+      "accessCount": 4,
+      "lastAccessed": 1782551276124,
+      "type": "file"
+    },
+    {
+      "path": "internal/web/template/layout.html",
+      "accessCount": 3,
+      "lastAccessed": 1782549573065,
+      "type": "file"
+    },
+    {
+      "path": "internal/web/handler/domain.go",
+      "accessCount": 3,
+      "lastAccessed": 1782550217433,
+      "type": "file"
+    },
+    {
+      "path": "internal/web/pages.go",
+      "accessCount": 3,
+      "lastAccessed": 1782550724433,
+      "type": "file"
+    },
+    {
+      "path": "internal/web/template/domains.html",
+      "accessCount": 3,
+      "lastAccessed": 1782550936958,
+      "type": "file"
+    },
+    {
+      "path": "internal/web/template/upstreams.html",
+      "accessCount": 3,
+      "lastAccessed": 1782551109110,
+      "type": "file"
+    },
+    {
+      "path": "internal/web/handler/util.go",
+      "accessCount": 3,
+      "lastAccessed": 1782551176600,
+      "type": "file"
+    },
+    {
+      "path": "internal/web/handler/upstream_batch_test.go",
+      "accessCount": 3,
+      "lastAccessed": 1782551212621,
+      "type": "file"
+    },
+    {
+      "path": "README.md",
+      "accessCount": 3,
+      "lastAccessed": 1782551308798,
+      "type": "file"
+    },
+    {
+      "path": "internal/web/template/login.html",
+      "accessCount": 2,
+      "lastAccessed": 1782549576649,
+      "type": "file"
+    },
+    {
+      "path": "internal/web/template/config.html",
+      "accessCount": 2,
+      "lastAccessed": 1782549590601,
+      "type": "file"
+    },
+    {
+      "path": "internal/store/domain_repo.go",
+      "accessCount": 2,
+      "lastAccessed": 1782549795309,
+      "type": "file"
+    },
+    {
+      "path": "internal/store/upstream_repo.go",
+      "accessCount": 2,
+      "lastAccessed": 1782549811475,
+      "type": "file"
+    },
+    {
+      "path": "internal/web/handler/csvlite.go",
+      "accessCount": 2,
+      "lastAccessed": 1782550167709,
+      "type": "file"
+    },
+    {
+      "path": "internal/web/handler/upstream.go",
+      "accessCount": 2,
+      "lastAccessed": 1782550241377,
+      "type": "file"
+    },
+    {
+      "path": "internal/web/static/app.js",
+      "accessCount": 2,
+      "lastAccessed": 1782550632451,
+      "type": "file"
+    },
+    {
+      "path": "internal/web/static.go",
+      "accessCount": 2,
+      "lastAccessed": 1782550879146,
+      "type": "file"
+    },
+    {
+      "path": "internal/web/static/edge.css",
+      "accessCount": 1,
+      "lastAccessed": 1782542762382,
+      "type": "file"
+    },
+    {
+      "path": "openspec/changes/redesign-admin-ui/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1782548600898,
+      "type": "file"
+    },
+    {
+      "path": "openspec/changes/redesign-admin-ui/proposal.md",
+      "accessCount": 1,
+      "lastAccessed": 1782548652023,
+      "type": "file"
+    },
+    {
+      "path": "openspec/changes/redesign-admin-ui/specs/admin-ui-redesign/spec.md",
+      "accessCount": 1,
+      "lastAccessed": 1782548707926,
+      "type": "file"
+    },
+    {
+      "path": "openspec/changes/redesign-admin-ui/specs/domain-upstream-batch-ops/spec.md",
+      "accessCount": 1,
+      "lastAccessed": 1782548786594,
+      "type": "file"
+    },
+    {
+      "path": "openspec/changes/redesign-admin-ui/design.md",
+      "accessCount": 1,
+      "lastAccessed": 1782548877532,
+      "type": "file"
+    },
+    {
+      "path": "package.json",
+      "accessCount": 1,
+      "lastAccessed": 1782549312813,
+      "type": "file"
+    },
+    {
+      "path": "tailwind.config.js",
+      "accessCount": 1,
+      "lastAccessed": 1782549316966,
+      "type": "file"
+    },
+    {
+      "path": "postcss.config.js",
+      "accessCount": 1,
+      "lastAccessed": 1782549317099,
+      "type": "file"
+    },
+    {
+      "path": "web/input.css",
+      "accessCount": 1,
+      "lastAccessed": 1782549317238,
+      "type": "file"
+    },
+    {
+      "path": "cmd/edge-proxy/cmd_version.go",
+      "accessCount": 1,
+      "lastAccessed": 1782549441373,
+      "type": "file"
+    },
+    {
+      "path": "internal/web/handler/login.go",
+      "accessCount": 1,
+      "lastAccessed": 1782549442686,
+      "type": "file"
+    },
+    {
+      "path": "internal/web/handler/config.go",
+      "accessCount": 1,
+      "lastAccessed": 1782549442838,
+      "type": "file"
+    },
+    {
+      "path": "internal/config/config.go",
+      "accessCount": 1,
+      "lastAccessed": 1782549443425,
+      "type": "file"
+    },
+    {
+      "path": "internal/store/models.go",
+      "accessCount": 1,
+      "lastAccessed": 1782549700876,
+      "type": "file"
+    },
+    {
+      "path": "internal/store/store.go",
+      "accessCount": 1,
+      "lastAccessed": 1782549701794,
+      "type": "file"
+    },
+    {
+      "path": "internal/store/domain_repo_test.go",
+      "accessCount": 1,
+      "lastAccessed": 1782549702370,
+      "type": "file"
+    },
+    {
+      "path": "internal/store/upstream_repo_test.go",
+      "accessCount": 1,
+      "lastAccessed": 1782549702697,
+      "type": "file"
+    },
+    {
+      "path": "internal/store/batch.go",
+      "accessCount": 1,
+      "lastAccessed": 1782549767610,
+      "type": "file"
+    },
+    {
+      "path": "internal/store/domain_repo_batch_test.go",
+      "accessCount": 1,
+      "lastAccessed": 1782549858370,
+      "type": "file"
+    },
+    {
+      "path": "internal/store/upstream_repo_batch_test.go",
+      "accessCount": 1,
+      "lastAccessed": 1782549876728,
+      "type": "file"
+    },
+    {
+      "path": "internal/web/handler/upstream_test.go",
+      "accessCount": 1,
+      "lastAccessed": 1782549947531,
+      "type": "file"
+    },
+    {
+      "path": "internal/web/handler/render.go",
+      "accessCount": 1,
+      "lastAccessed": 1782549948434,
+      "type": "file"
+    },
+    {
+      "path": "internal/web/middleware/auth.go",
+      "accessCount": 1,
+      "lastAccessed": 1782549948580,
+      "type": "file"
+    },
+    {
+      "path": "internal/web/handler/csvlite_test.go",
+      "accessCount": 1,
+      "lastAccessed": 1782550104626,
+      "type": "file"
+    },
+    {
+      "path": "internal/web/handler/domain_batch_test.go",
+      "accessCount": 1,
+      "lastAccessed": 1782550314094,
+      "type": "file"
+    },
+    {
+      "path": "internal/web/views.go",
+      "accessCount": 1,
+      "lastAccessed": 1782550750892,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}

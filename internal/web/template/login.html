@@ -1,11 +1,24 @@
 {{define "content"}}
-<section class="card">
-  <h2>登录</h2>
-  <form method="post" action="/login">
-    <label>用户名 <input name="username" autofocus required></label>
-    <label>密码 <input name="password" type="password" required></label>
-    {{if .Error}}<p class="error">{{.Error}}</p>{{end}}
-    <button type="submit">登录</button>
-  </form>
-</section>
+<div class="min-h-screen flex flex-col items-center justify-center bg-base-200 px-4">
+  <div class="mb-6 text-center">
+    <div class="text-5xl mb-2">☁</div>
+    <h1 class="text-2xl font-semibold">edge-proxy</h1>
+    <p class="text-sm text-base-content/60 mt-1">管理后台</p>
+  </div>
+  <div class="card w-full max-w-sm bg-base-100 shadow-md">
+    <form method="post" action="/login" class="card-body gap-3">
+      <label class="form-control">
+        <span class="label-text text-sm">用户名</span>
+        <input name="username" autofocus required class="input input-bordered input-sm" />
+      </label>
+      <label class="form-control">
+        <span class="label-text text-sm">密码</span>
+        <input name="password" type="password" required class="input input-bordered input-sm" />
+      </label>
+      {{if .Error}}<p class="text-error text-sm">{{.Error}}</p>{{end}}
+      <button type="submit" class="btn btn-primary mt-2">登 录</button>
+    </form>
+  </div>
+  <p class="text-xs text-base-content/50 mt-6">v{{.Version}} · {{.NodeName}}</p>
+</div>
 {{end}}

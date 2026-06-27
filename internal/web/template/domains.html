@@ -1,43 +1,301 @@
 {{define "content"}}
-<section class="card">
-  <h2>新增域名</h2>
-  <form hx-post="/domains" hx-target="#domain-rows" hx-swap="afterbegin" hx-on::after-request="this.reset()">
-    <label>域名 <input name="host" placeholder="example.com" required></label>
-    <button type="submit">添加</button>
+<div x-data="pageState({resource:'domains'})" class="space-y-4 max-w-7xl" @keydown.escape.window="closeModal()">
+
+  <!-- Search + filter + add bar -->
+  <form id="domain-search"
+        hx-get="/"
+        hx-target="#domain-list"
+        hx-swap="outerHTML"
+        hx-trigger="chipchange delay:200ms, change from:select"
+        hx-push-url="false"
+        @submit.prevent
+        class="card bg-base-100 shadow-sm">
+    <div class="card-body p-4 flex flex-wrap items-center gap-3">
+
+      <!-- chip input -->
+      <div x-data="chipInput({inputName:'hosts'})"
+           data-initial-chips="{{.List.HostsStr}}"
+           x-init="if ($el.dataset.initialChips) { chips = $el.dataset.initialChips.split('\n').filter(Boolean); $nextTick(() => recompute()); }"
+           @click="focusInput()"
+           class="flex-1 min-w-[360px] relative">
+        <div class="input input-bordered input-sm flex items-center pr-2 cursor-text h-auto py-1">
+          <span class="text-base-content/50 mr-1 select-none">🔍</span>
+          <div x-ref="strip" class="flex items-center gap-1 flex-1 overflow-hidden flex-nowrap min-w-0 whitespace-nowrap">
+            <template x-for="(chip, idx) in chips" :key="chip">
+              <span data-chip class="badge badge-neutral badge-sm gap-1 shrink-0">
+                <span class="max-w-[160px] truncate" x-text="chip"></span>
+                <button type="button" @click.stop="removeChip(idx)" class="text-xs leading-none hover:text-error">×</button>
+              </span>
+            </template>
+            <input x-ref="input"
+                   x-model="buffer"
+                   @keydown="onKey($event)"
+                   @paste="onPaste($event)"
+                   @compositionstart="onCompositionStart()"
+                   @compositionend="onCompositionEnd($event)"
+                   :placeholder="chips.length === 0 ? '精确搜索域名（粘贴多行 / Enter 添加）' : ''"
+                   class="flex-1 min-w-[120px] bg-transparent outline-none text-sm border-0 p-0 focus:ring-0">
+          </div>
+          <div class="flex-none flex items-center gap-1 pl-1">
+            <button type="button"
+                    x-show="overflowCount > 0"
+                    @click.stop="togglePopover()"
+                    class="badge badge-ghost badge-sm gap-0 cursor-pointer select-none">
+              +<span x-text="overflowCount"></span>
+            </button>
+            <button type="button"
+                    x-show="chips.length > 0"
+                    @click.stop="clearAll()"
+                    class="text-base-content/50 hover:text-error text-sm px-1 leading-none"
+                    title="清空所有 chip">×</button>
+          </div>
+        </div>
+
+        <!-- popover: full chip list -->
+        <div x-show="popoverOpen" x-cloak
+             @click.outside="closePopover()"
+             x-transition
+             class="absolute top-full mt-1 right-0 bg-base-100 border border-base-300 rounded-md shadow-lg p-3 z-30 w-[420px] max-h-72 overflow-y-auto">
+          <div class="text-xs text-base-content/60 mb-2">全部 <span x-text="chips.length"></span> 项（点击 × 移除）</div>
+          <div class="flex flex-wrap gap-1">
+            <template x-for="(chip, idx) in chips" :key="'p-' + chip">
+              <span class="badge badge-neutral badge-sm gap-1">
+                <span class="truncate max-w-[260px]" x-text="chip"></span>
+                <button @click="removeChip(idx)" class="text-xs leading-none hover:text-error">×</button>
+              </span>
+            </template>
+          </div>
+        </div>
+
+        <!-- htmx-serialised hidden field -->
+        <input type="hidden" name="hosts" :value="chips.join('\n')">
+      </div>
+
+      <select name="status" class="select select-bordered select-sm">
+        <option value="all" {{if eq .List.Status ""}}selected{{end}}>全部状态</option>
+        <option value="pending" {{if eq .List.Status "pending"}}selected{{end}}>pending</option>
+        <option value="cert_applying" {{if eq .List.Status "cert_applying"}}selected{{end}}>cert_applying</option>
+        <option value="cert_failed" {{if eq .List.Status "cert_failed"}}selected{{end}}>cert_failed</option>
+        <option value="online" {{if eq .List.Status "online"}}selected{{end}}>online</option>
+        <option value="degraded" {{if eq .List.Status "degraded"}}selected{{end}}>degraded</option>
+        <option value="deprecated" {{if eq .List.Status "deprecated"}}selected{{end}}>deprecated</option>
+      </select>
+
+      <div class="ml-auto flex items-center gap-2">
+        <form hx-post="/domains"
+              hx-target="#domain-rows"
+              hx-swap="afterbegin"
+              hx-on::after-request="this.reset()"
+              class="flex items-center gap-1">
+          <input name="host" placeholder="example.com" required class="input input-bordered input-sm w-44">
+          <button type="submit" class="btn btn-primary btn-sm">+ 新增</button>
+        </form>
+        <button type="button" @click="openImport()" class="btn btn-outline btn-sm">⬆ 批量导入</button>
+      </div>
+    </div>
   </form>
-</section>
-<section class="card">
-  <h2>域名列表</h2>
-  <table>
-    <thead>
-      <tr><th>域名</th><th>状态</th><th>证书时间</th><th>最近探测</th><th>操作</th></tr>
-    </thead>
-    <tbody id="domain-rows">
-    {{range .Domains}}
-      {{template "domain_row" .}}
+
+  <!-- Sticky floating batch toolbar -->
+  <div x-show="selectionCount > 0" x-cloak x-transition
+       class="sticky top-0 z-20 card bg-warning/10 border border-warning shadow-md">
+    <div class="card-body p-3 flex flex-row items-center gap-2 flex-wrap">
+      <span class="font-semibold">已选 <span x-text="selectionCount"></span> 项</span>
+      <button @click="copyHosts()" class="btn btn-sm btn-ghost">📋 复制域名</button>
+      <button @click="openAction('deprecate', '批量废弃')" class="btn btn-sm btn-warning">⏸ 批量废弃</button>
+      <button @click="openAction('retry', '批量重试')" class="btn btn-sm">↻ 批量重试</button>
+      <button @click="openAction('recycle', '批量回收', {danger:true})" class="btn btn-sm btn-error">🗑 批量回收</button>
+      <button @click="clearSelection()" class="btn btn-sm btn-ghost ml-auto">✕ 清空选择</button>
+    </div>
+  </div>
+
+  <!-- Swappable list partial -->
+  {{template "domain_list" .List}}
+
+  <!-- Action confirm modal -->
+  <div x-show="modal.open && modal.kind === 'action'" x-cloak class="modal modal-open">
+    <div class="modal-box max-w-2xl">
+      <h3 class="font-bold text-lg" :class="modal.danger ? 'text-error' : ''" x-text="modal.title"></h3>
+      <p class="py-2 text-sm text-base-content/70">将对以下 <span x-text="selectionCount"></span> 个域名执行此操作：</p>
+      <div class="max-h-60 overflow-y-auto bg-base-200 rounded p-2 my-2">
+        <template x-for="host in selectedHosts" :key="host">
+          <div class="font-mono text-xs leading-relaxed" x-text="host"></div>
+        </template>
+      </div>
+      <div x-show="modal.danger" class="alert alert-error text-sm py-2 my-2">
+        ⚠ 含 nginx conf + LE 证书将一并删除，不可恢复
+      </div>
+      <div class="modal-action">
+        <button @click="closeModal()" class="btn btn-ghost btn-sm" :disabled="submitting">取消</button>
+        <button @click="submitAction()"
+                :class="modal.danger ? 'btn-error' : 'btn-primary'"
+                class="btn btn-sm"
+                :disabled="submitting">
+          <span x-show="!submitting">确认</span>
+          <span x-show="submitting" class="loading loading-spinner loading-xs"></span>
+        </button>
+      </div>
+    </div>
+    <div class="modal-backdrop bg-black/50" @click="closeModal()"></div>
+  </div>
+
+  <!-- Import modal -->
+  <div x-show="modal.open && modal.kind === 'import'" x-cloak class="modal modal-open">
+    <div class="modal-box max-w-2xl">
+      <h3 class="font-bold text-lg" x-text="modal.title"></h3>
+      <p class="py-2 text-sm text-base-content/70">每行一个域名（最多 200 条）。已存在的域名将被跳过。</p>
+      <textarea x-model="importText"
+                rows="10"
+                placeholder="a.example.com&#10;b.example.com&#10;..."
+                class="textarea textarea-bordered w-full font-mono text-sm"
+                :disabled="submitting"></textarea>
+
+      <template x-if="importResult">
+        <div class="mt-3">
+          <template x-if="importResult.error">
+            <div class="alert alert-error text-sm py-2" x-text="importResult.error"></div>
+          </template>
+          <template x-if="!importResult.error">
+            <div class="space-y-2 text-sm">
+              <div class="flex gap-2">
+                <span class="badge badge-success" x-text="'创建 ' + (importResult.created || []).length"></span>
+                <span class="badge badge-warning" x-text="'跳过 ' + (importResult.skipped || []).length"></span>
+                <span class="badge badge-error" x-text="'失败 ' + (importResult.failed || []).length"></span>
+              </div>
+              <template x-if="(importResult.failed || []).length > 0">
+                <div class="bg-base-200 rounded p-2 max-h-48 overflow-y-auto">
+                  <template x-for="f in importResult.failed" :key="f.host">
+                    <div class="font-mono text-xs">
+                      <span class="text-error">✗</span>
+                      <span x-text="f.host"></span>
+                      <span class="text-base-content/60"> — </span>
+                      <span x-text="f.reason"></span>
+                    </div>
+                  </template>
+                </div>
+              </template>
+              <template x-if="(importResult.skipped || []).length > 0">
+                <div class="bg-base-200 rounded p-2 max-h-48 overflow-y-auto">
+                  <template x-for="h in importResult.skipped" :key="h">
+                    <div class="font-mono text-xs">
+                      <span class="text-warning">⚠</span>
+                      <span x-text="h"></span>
+                      <span class="text-base-content/60"> — 已存在</span>
+                    </div>
+                  </template>
+                </div>
+              </template>
+            </div>
+          </template>
+        </div>
+      </template>
+
+      <div class="modal-action">
+        <button @click="closeModal()" class="btn btn-ghost btn-sm" :disabled="submitting">关闭</button>
+        <button @click="submitImport()" class="btn btn-primary btn-sm" :disabled="submitting || !importText.trim()">
+          <span x-show="!submitting">验证并提交</span>
+          <span x-show="submitting" class="loading loading-spinner loading-xs"></span>
+        </button>
+      </div>
+    </div>
+    <div class="modal-backdrop bg-black/50" @click="closeModal()"></div>
+  </div>
+
+</div>
+{{end}}
+
+{{define "domain_list"}}
+<div id="domain-list"
+     hx-trigger="refresh"
+     hx-get="/"
+     hx-include="#domain-search"
+     hx-swap="outerHTML">
+  {{if .Truncated}}
+  <div role="alert" class="alert alert-warning text-sm py-2 mb-2">
+    ⚠ 搜索 chip 数量超过 200，已截断为前 200 项。
+  </div>
+  {{end}}
+
+  <div class="card bg-base-100 shadow-sm">
+    <div class="card-body p-0">
+      <div class="overflow-x-auto">
+        <table class="table table-sm">
+          <thead>
+            <tr>
+              <th class="w-8">
+                <input type="checkbox" data-select-all class="checkbox checkbox-sm"
+                       @change="selectAllVisible($event.target.checked)">
+              </th>
+              <th>域名</th><th>状态</th><th>证书时间</th><th>最近探测</th><th class="text-right">操作</th>
+            </tr>
+          </thead>
+          <tbody id="domain-rows">
+          {{range .Items}}
+            {{template "domain_row" .}}
+          {{else}}
+            <tr><td colspan="6" class="text-center text-base-content/50 py-6">无匹配域名</td></tr>
+          {{end}}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex items-center text-xs text-base-content/60 mt-2">
+    <span>共 {{.Total}} 条{{if .SearchMode}}（搜索模式 · 分页已禁用）{{end}}</span>
+    {{if and (not .SearchMode) (gt .TotalPages 1)}}
+    <div class="join ml-auto">
+      {{$p := .Page}}{{$s := .Status}}
+      {{range $n := seq .TotalPages}}
+        <a hx-get="/?page={{$n}}{{if $s}}&status={{$s}}{{end}}"
+           hx-include="#domain-search"
+           hx-target="#domain-list"
+           hx-swap="outerHTML"
+           class="join-item btn btn-sm {{if eq $n $p}}btn-active btn-primary{{end}}">
+          {{$n}}
+        </a>
+      {{end}}
+    </div>
     {{end}}
-    </tbody>
-  </table>
-</section>
+  </div>
+</div>
 {{end}}
 
 {{define "domain_row"}}
-<tr id="d-{{.ID}}" data-status="{{.Status}}">
-  <td>{{.Host}}</td>
-  <td><span class="status status-{{.Status}}">{{.Status}}</span></td>
-  <td>{{if .CertAt}}{{.CertAt.Format "2006-01-02"}}{{else}}—{{end}}</td>
+<tr id="d-{{.ID}}" data-status="{{.Status}}" :class="isSelected({{.ID}}) ? 'bg-warning/10' : ''">
   <td>
+    <input type="checkbox"
+           data-row-check
+           data-row-id="{{.ID}}"
+           data-row-host="{{.Host}}"
+           class="checkbox checkbox-sm"
+           :checked="isSelected({{.ID}})"
+           @change="toggleRow({{.ID}}, '{{.Host}}', $event.target.checked)">
+  </td>
+  <td class="font-mono text-sm">{{.Host}}</td>
+  <td>
+    {{if eq .Status "pending"}}<span class="badge badge-warning badge-sm">pending</span>
+    {{else if eq .Status "cert_applying"}}<span class="badge badge-info badge-sm">cert_applying</span>
+    {{else if eq .Status "cert_failed"}}<span class="badge badge-error badge-sm">cert_failed</span>
+    {{else if eq .Status "online"}}<span class="badge badge-success badge-sm">online</span>
+    {{else if eq .Status "degraded"}}<span class="badge badge-warning badge-sm">degraded</span>
+    {{else if eq .Status "deprecated"}}<span class="badge badge-ghost badge-sm">deprecated</span>
+    {{else}}<span class="badge badge-sm">{{.Status}}</span>{{end}}
+  </td>
+  <td class="text-sm">{{if .CertAt}}{{.CertAt.Format "2006-01-02"}}{{else}}—{{end}}</td>
+  <td class="text-sm">
     {{if .LastProbeAt}}
-      {{if .LastProbeOK}}<span class="ok">✓</span>{{else}}<span class="ko">✗</span>{{end}}
-      {{.LastProbeAt.Format "01-02 15:04"}}
+      {{if .LastProbeOK}}<span class="text-success font-semibold">✓</span>{{else}}<span class="text-error font-semibold">✗</span>{{end}}
+      <span class="text-base-content/70">{{.LastProbeAt.Format "01-02 15:04"}}</span>
     {{else}}—{{end}}
   </td>
-  <td class="actions">
-    {{if eq .Status "cert_failed"}}<button hx-post="/domains/{{.ID}}/retry" hx-target="#d-{{.ID}}" hx-swap="outerHTML">重试</button>{{end}}
+  <td class="text-right whitespace-nowrap">
+    {{if eq .Status "cert_failed"}}
+      <button hx-post="/domains/{{.ID}}/retry" hx-target="#d-{{.ID}}" hx-swap="outerHTML" class="btn btn-ghost btn-xs">重试</button>
+    {{end}}
     {{if ne .Status "deprecated"}}
-      <button hx-post="/domains/{{.ID}}/deprecate" hx-confirm="确认废弃 {{.Host}}?" hx-target="#d-{{.ID}}" hx-swap="outerHTML">废弃</button>
+      <button hx-post="/domains/{{.ID}}/deprecate" hx-confirm="确认废弃 {{.Host}}?" hx-target="#d-{{.ID}}" hx-swap="outerHTML" class="btn btn-ghost btn-xs">废弃</button>
     {{else}}
-      <button hx-post="/domains/{{.ID}}/recycle" hx-confirm="彻底清理 {{.Host}} (含 nginx conf + LE 证书)?" hx-target="#d-{{.ID}}" hx-swap="delete" class="danger">回收</button>
+      <button hx-post="/domains/{{.ID}}/recycle" hx-confirm="彻底清理 {{.Host}} (含 nginx conf + LE 证书)?" hx-target="#d-{{.ID}}" hx-swap="delete" class="btn btn-error btn-xs">回收</button>
     {{end}}
   </td>
 </tr>

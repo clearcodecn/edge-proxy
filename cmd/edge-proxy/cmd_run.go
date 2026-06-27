@@ -74,7 +74,11 @@ func runEdgeProxy(configPath string) error {
 	}
 
 	templates := web.MustLoadTemplates()
-	pages := web.NewPageRenderer(templates)
+	hostName, _ := os.Hostname()
+	if hostName == "" {
+		hostName = "unknown"
+	}
+	pages := web.NewPageRenderer(templates, hostName, web.BuildVersion(), cfg.Admin.Username)
 	sessions := mw.NewSessionStore(mw.DefaultSessionTTL)
 
 	login := handler.NewLoginHandler(cfg.Admin.Username, cfg.Admin.PasswordHash, sessions)
@@ -159,21 +163,31 @@ func buildRouter(cfg *config.Config, pages *web.PageRenderer, login *handler.Log
 
 	r.Group(func(r chi.Router) {
 		r.Use(mw.RequireAuth(sessions, "/login"))
-		r.Get("/", func(w http.ResponseWriter, _ *http.Request) {
-			domains, err := domainRepo.List()
+		r.Get("/", func(w http.ResponseWriter, req *http.Request) {
+			q := req.URL.Query()
+			view, err := web.BuildDomainListView(domainRepo, q.Get("hosts"), q.Get("status"), q.Get("page"))
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			pages.RenderDomains(w, domains)
+			if req.Header.Get("HX-Request") == "true" {
+				pages.RenderDomainList(w, view)
+			} else {
+				pages.RenderDomains(w, view)
+			}
 		})
-		r.Get("/upstreams", func(w http.ResponseWriter, _ *http.Request) {
-			items, err := upstreamRepo.List()
+		r.Get("/upstreams", func(w http.ResponseWriter, req *http.Request) {
+			q := req.URL.Query()
+			view, err := web.BuildUpstreamListView(upstreamRepo, q.Get("addrs"), q.Get("status"), q.Get("page"))
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			pages.RenderUpstreams(w, items)
+			if req.Header.Get("HX-Request") == "true" {
+				pages.RenderUpstreamList(w, view)
+			} else {
+				pages.RenderUpstreams(w, view)
+			}
 		})
 		r.Get("/config", func(w http.ResponseWriter, _ *http.Request) {
 			pages.RenderConfig(w, cfg)
@@ -185,9 +199,21 @@ func buildRouter(cfg *config.Config, pages *web.PageRenderer, login *handler.Log
 		r.Post("/domains/{id}/recycle", domainHdl.RecyclePOST)
 		r.Post("/domains/{id}/retry", domainHdl.RetryPOST)
 
+		// Domain batch endpoints (Phase 4 of redesign-admin-ui).
+		r.Post("/domains/batch", domainHdl.BatchImportPOST)
+		r.Post("/domains/batch/deprecate", domainHdl.BatchDeprecatePOST)
+		r.Post("/domains/batch/retry", domainHdl.BatchRetryPOST)
+		r.Post("/domains/batch/recycle", domainHdl.BatchRecyclePOST)
+
 		r.Post("/upstreams", upstreamHdl.CreatePOST)
 		r.Post("/upstreams/{id}/toggle", upstreamHdl.TogglePOST)
 		r.Delete("/upstreams/{id}", upstreamHdl.DeleteHTTP)
+
+		// Upstream batch endpoints.
+		r.Post("/upstreams/batch", upstreamHdl.BatchImportPOST)
+		r.Post("/upstreams/batch/enable", upstreamHdl.BatchEnablePOST)
+		r.Post("/upstreams/batch/disable", upstreamHdl.BatchDisablePOST)
+		r.Delete("/upstreams/batch", upstreamHdl.BatchDeletePOST)
 	})
 
 	return r

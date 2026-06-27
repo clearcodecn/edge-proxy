@@ -1,29 +1,54 @@
 {{define "layout"}}<!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="light">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{.Title}} · edge-proxy</title>
-  <link rel="stylesheet" href="/static/edge.css">
-  <script src="https://unpkg.com/htmx.org@1.9.10/dist/htmx.min.js" defer></script>
+  <link rel="stylesheet" href="/static/tailwind.css">
+  <script src="/static/htmx.min.js" defer></script>
+  <script src="/static/app.js" defer></script>
+  <script src="/static/alpine.min.js" defer></script>
 </head>
-<body>
-  <header>
-    <h1>edge-proxy</h1>
-    {{if .Authenticated}}
-    <nav>
-      <a href="/" {{if eq .Page "domains"}}class="active"{{end}}>域名</a>
-      <a href="/upstreams" {{if eq .Page "upstreams"}}class="active"{{end}}>回源</a>
-      <a href="/config" {{if eq .Page "config"}}class="active"{{end}}>配置</a>
-      <form method="post" action="/logout" style="display:inline">
-        <button type="submit" class="link">退出</button>
-      </form>
-    </nav>
-    {{end}}
-  </header>
-  <main>
-    {{template "content" .}}
-  </main>
+<body class="min-h-screen bg-base-200 text-base-content">
+{{if .Authenticated}}
+  <div class="flex min-h-screen">
+    <aside class="w-60 shrink-0 bg-base-100 border-r border-base-300 flex flex-col">
+      <div class="px-5 py-4 text-lg font-semibold tracking-wide flex items-center gap-2">
+        <span>☁</span><span>edge-proxy</span>
+      </div>
+      <ul class="menu menu-md px-2 gap-1">
+        <li><a href="/" class="{{if eq .Page "domains"}}active font-semibold{{end}}">🌐 域名</a></li>
+        <li><a href="/upstreams" class="{{if eq .Page "upstreams"}}active font-semibold{{end}}">⚙ 回源</a></li>
+        <li><a href="/config" class="{{if eq .Page "config"}}active font-semibold{{end}}">🔧 配置</a></li>
+      </ul>
+      <div class="mt-auto px-5 py-3 text-xs text-base-content/40">v{{.Version}}</div>
+    </aside>
+    <div class="flex-1 flex flex-col min-w-0">
+      <header class="navbar bg-base-100 border-b border-base-300 px-6 py-2 min-h-12">
+        <div class="flex-1 flex items-baseline gap-3">
+          <span class="text-base font-semibold">{{.Title}}</span>
+          <span class="text-xs text-base-content/50">节点 · {{.NodeName}}</span>
+        </div>
+        <div class="flex-none flex items-center gap-3">
+          <span class="text-xs text-base-content/70">👤 {{.User}}</span>
+          <form method="post" action="/logout">
+            <button type="submit" class="btn btn-ghost btn-xs">退出</button>
+          </form>
+        </div>
+      </header>
+      <main class="flex-1 p-6 overflow-x-auto">
+        {{template "content" .}}
+      </main>
+    </div>
+  </div>
+  <div x-data="toastBus()" class="toast toast-top toast-end z-50">
+    <template x-for="t in items" :key="t.id">
+      <div :class="'alert alert-' + t.type + ' shadow-md text-sm'" x-text="t.msg"></div>
+    </template>
+  </div>
+{{else}}
+  {{template "content" .}}
+{{end}}
 </body>
 </html>
 {{end}}

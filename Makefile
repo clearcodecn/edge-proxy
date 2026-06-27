@@ -8,7 +8,7 @@ PROJECT  := edge-proxy
 DIST     := dist
 COMMIT   := $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 
-.PHONY: all build test test-race lint vet fmt clean release smoke help
+.PHONY: all build test test-race lint vet fmt clean release smoke help ui ui-watch ui-install
 
 all: build
 
@@ -20,6 +20,9 @@ help:
 	@echo "  vet        - go vet ./..."
 	@echo "  fmt        - gofmt -w on all .go files"
 	@echo "  lint       - vet + gofmt check (no diff allowed)"
+	@echo "  ui         - one-shot Tailwind/daisyUI build → internal/web/static/tailwind.css"
+	@echo "  ui-watch   - Tailwind in --watch mode for local dev"
+	@echo "  ui-install - npm install (run once before make ui on a fresh checkout)"
 	@echo "  release    - cross-compile linux/amd64 + linux/arm64 into $(DIST)/"
 	@echo "  smoke      - build, run briefly with tmp config, probe /login"
 	@echo "  clean      - remove $(DIST)/ and built binary"
@@ -56,6 +59,23 @@ release: clean
 	cd $(DIST) && shasum -a 256 $(PROJECT)-* > SHA256SUMS
 	@echo "Release artifacts in $(DIST)/:"
 	@ls -lh $(DIST)/
+
+ui-install:
+	npm install
+
+ui:
+	npm run build
+
+ui-watch:
+	npm run watch
+
+# CI hook: rebuild Tailwind, fail if the committed tailwind.css drifted from source.
+ui-check: ui
+	@if ! git diff --quiet -- internal/web/static/tailwind.css; then \
+		echo "tailwind.css is out of sync with source. Run 'make ui' and commit."; \
+		git --no-pager diff -- internal/web/static/tailwind.css; \
+		exit 1; \
+	fi
 
 clean:
 	rm -rf $(DIST) $(PROJECT)

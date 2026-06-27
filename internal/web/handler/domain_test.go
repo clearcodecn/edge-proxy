@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -20,21 +21,34 @@ import (
 
 // ── fakes ─────────────────────────────────────────────────────────────────
 
+// fakeCertbotForWeb records every Delete(host) call. Mutex-guarded because
+// BatchRecycle fires one goroutine per deleted domain — the original
+// atomic.Value implementation lost entries under concurrent append.
 type fakeCertbotForWeb struct {
-	deleted atomic.Value // []string
+	mu      sync.Mutex
+	deleted []string
 }
 
 func (f *fakeCertbotForWeb) Delete(host string) error {
-	old, _ := f.deleted.Load().([]string)
-	f.deleted.Store(append(old, host))
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.deleted = append(f.deleted, host)
 	return nil
+}
+
+func (f *fakeCertbotForWeb) snapshot() []string {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	out := make([]string, len(f.deleted))
+	copy(out, f.deleted)
+	return out
 }
 
 func (f *fakeCertbotForWeb) waitForDelete(t *testing.T, host string) {
 	t.Helper()
 	deadline := time.Now().Add(time.Second)
 	for time.Now().Before(deadline) {
-		if got, _ := f.deleted.Load().([]string); contains(got, host) {
+		if contains(f.snapshot(), host) {
 			return
 		}
 		time.Sleep(5 * time.Millisecond)
@@ -198,7 +212,7 @@ func TestDomain_RecycleNonDeprecated_Rejects(t *testing.T) {
 	if len(nx.removed) != 0 {
 		t.Errorf("nginx.RemoveFile should not be called, got %v", nx.removed)
 	}
-	if got, _ := cb.deleted.Load().([]string); len(got) != 0 {
+	if got := cb.snapshot(); len(got) != 0 {
 		t.Errorf("certbot.Delete should not be called, got %v", got)
 	}
 }
